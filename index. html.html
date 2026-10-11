@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi asistente personal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2F6; --ink:#17243A; --muted:#5B6B82; --accent:#D9791A; --card:#FFFFFF; --line:#CBD5E1;
+  --me-bg:#17243A; --me-ink:#F4F7FB;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#111B2E;--ink:#E8EEF6;--muted:#9AABC4;--accent:#F2A74F;--card:#1A2740;--line:#2C3C5A;--me-bg:#F2A74F;--me-ink:#1A1206}
+}
+:root[data-theme="dark"]{--bg:#111B2E;--ink:#E8EEF6;--muted:#9AABC4;--accent:#F2A74F;--card:#1A2740;--line:#2C3C5A;--me-bg:#F2A74F;--me-ink:#1A1206}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.5;min-height:100vh}
+main{max-width:1180px;margin:0 auto;padding:32px 20px 40px;display:grid;grid-template-columns:minmax(0,1fr);gap:0 40px}
+.info{min-width:0;max-width:640px}
+.assist{min-width:0}
+.clock{padding:8px 0 28px;border-bottom:2px solid var(--ink)}
+.clock .date{margin:0 0 4px;color:var(--muted);font-size:1.05rem;text-transform:capitalize}
+.clock .time{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(3.2rem,16vw,6.5rem);line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.clock .time .sec{color:var(--accent)}
+.clock .zone{margin:10px 0 0;color:var(--muted);font-size:.9rem}
+h1{font-family:var(--display);font-weight:500;font-size:1.25rem;margin:28px 0 14px}
+.log{display:flex;flex-direction:column;gap:10px;min-height:120px}
+.msg{max-width:85%;padding:10px 14px;border-radius:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.bot{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg.me{align-self:flex-end;background:var(--me-bg);color:var(--me-ink);border-bottom-right-radius:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.chips button{font:inherit;font-size:.9rem;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.chips button:hover{border-color:var(--accent)}
+.ask{display:flex;gap:8px}
+.ask input{flex:1;min-width:0;font:inherit;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.ask button{font:inherit;font-weight:600;padding:12px 18px;border-radius:10px;border:0;background:var(--accent);color:#1A1206;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.note{margin-top:22px;color:var(--muted);font-size:.85rem}
+.panel{margin:24px 0 0;padding:16px 18px;border:1px solid var(--line);background:var(--card);border-radius:12px}
+.panel h2{font-family:var(--display);font-weight:500;font-size:1.05rem;margin:0 0 8px}
+.bday{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.bday .n{font-family:var(--display);font-weight:800;font-size:2.4rem;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+.bday .t{color:var(--muted)}
+.exams{list-style:none;margin:0;padding:0}
+.exams li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line)}
+.exams li:first-child{border-top:0}
+.exams .d{color:var(--muted);text-align:right}
+.exams li.past{opacity:.5;text-decoration:line-through}
+.rates,.news{list-style:none;margin:0;padding:0}
+.rates li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line)}
+.rates li:first-child{border-top:0}
+.rates strong{font-family:var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.news li{padding:8px 0;border-top:1px solid var(--line)}
+.news li:first-child{border-top:0}
+.news b{font-weight:600}
+.src{margin:10px 0 0;color:var(--muted);font-size:.82rem}
+.ask #mic{padding:12px 14px;background:var(--card);border:1px solid var(--line);color:var(--ink)}
+.ask #mic.on{background:var(--accent);border-color:var(--accent);color:#1A1206}
+.voice{display:flex;align-items:center;gap:8px;margin:0 0 10px;color:var(--muted);font-size:.9rem}
+.orb-wrap{display:flex;justify-content:center;margin:0 0 18px}
+.voice{flex-wrap:wrap;gap:8px 16px}
+.voice label{display:flex;align-items:center;gap:6px}
+.voice select{font:inherit;font-size:.85rem;max-width:100%;padding:4px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+#orb{width:min(300px,72vw);height:min(300px,72vw)}
+@media (min-width:900px){
+  main{grid-template-columns:minmax(0,1fr) minmax(360px,440px);align-items:start}
+  .assist{position:sticky;top:max(16px,env(safe-area-inset-top,0px));max-height:calc(100vh - 32px);overflow-y:auto;padding:4px 4px 8px}
+  .assist h1{margin-top:0}
+  #orb{width:min(220px,100%);height:min(220px,100%)}
+  .log{max-height:34vh;overflow-y:auto;min-height:80px}
+}
+</style>
+</head>
+<body>
+<main>
+  <div class="info">
+  <section class="clock" aria-label="Hora actual">
+    <p class="date" id="date"></p>
+    <p class="time" id="time" aria-hidden="true"></p>
+    <p class="zone" id="zone"></p>
+  </section>
+
+  <section class="panel" aria-label="Cuenta regresiva de tu cumpleaños">
+    <h2>🎂 Tu cumpleaños</h2>
+    <div class="bday"><span class="n" id="bn"></span><span class="t" id="bt"></span></div>
+  </section>
+  <section class="panel" aria-label="Tus exámenes">
+    <h2>📝 Tus exámenes</h2>
+    <ul class="exams" id="exams"></ul>
+  </section>
+
+  <section class="panel" aria-label="Dólar en Venezuela">
+    <h2>💵 Dólar en Venezuela</h2>
+    <ul class="rates">
+      <li><span>Oficial (BCV)</span><strong id="d-bcv">Bs. 876,80</strong></li>
+      <li><span>Paralelo (Binance P2P)</span><strong id="d-par">≈ Bs. 1.015</strong></li>
+      <li><span>Brecha entre ambos</span><strong id="d-gap">≈ 16 %</strong></li>
+      <li><span>Devaluación del bolívar en 2026</span><strong id="d-dev">≈ 66 %</strong></li>
+    </ul>
+    <p class="src" id="d-note">El dólar oficial empezó el año en Bs. 301,37 y hoy marca Bs. 876,80, un alza de unos 191 %. La tasa del BCV rige hasta el martes 13 de octubre. El paralelo superó los Bs. 1.000 por primera vez, según Bloomberg. Datos del 10 de octubre de 2026: la página no los actualiza sola.</p>
+  </section>
+  <section class="panel" aria-label="Noticias del mundo">
+    <h2>🌍 Cómo está el mundo</h2>
+    <ul class="news" id="news"></ul>
+    <p class="src" id="n-note">Resumen del 10 de octubre de 2026 según Euronews, EFE y otros medios. Es una captura fija: no se actualiza sola.</p>
+  </section>
+
+  </div>
+  <aside class="assist" aria-label="Asistente">
+  <h1>Pregúntale a tu asistente</h1>
+  <div class="orb-wrap"><canvas id="orb" width="520" height="520" role="img" aria-label="Esfera animada de puntos que se mueve cuando el asistente habla"></canvas></div>
+  <div class="log" id="log" role="log" aria-live="polite"></div>
+
+  <div class="chips" id="chips">
+    <button type="button">¿Qué hora es?</button>
+    <button type="button">¿Qué fecha es hoy?</button>
+    <button type="button">¿Qué día de la semana es?</button>
+    <button type="button">¿Cuándo son mis exámenes?</button>
+    <button type="button">¿Cuánto falta para mi cumpleaños?</button>
+    <button type="button">¿A cuánto está el dólar?</button>
+    <button type="button">¿Qué pasa en el mundo?</button>
+  </div>
+
+  <div class="voice" id="voicebox">
+    <label><input type="checkbox" id="speak" checked> Respuestas en voz alta</label>
+    <label><input type="checkbox" id="robot" checked> Modo Terminator</label>
+    <select id="voicesel" aria-label="Elegir voz"></select>
+  </div>
+  <form class="ask" id="form" autocomplete="off">
+    <input id="q" type="text" aria-label="Escribe tu pregunta" placeholder="Escribe: ¿qué hora es?">
+    <button type="button" id="mic" aria-label="Hablar" title="Hablar">🎤</button>
+    <button type="submit">Preguntar</button>
+  </form>
+  <p class="note">El asistente responde sobre la hora, la fecha, tus exámenes, tu cumpleaños, el dólar y las noticias. La hora usa el reloj de tu dispositivo; el dólar y las noticias se actualizan solos cada vez que abres la página.</p>
+  </aside>
+</main>
+
+<script>
+(function(){
+  var tz = "";
+  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch(e) {}
+  var $ = function(id){ return document.getElementById(id); };
+  var pad = function(n){ return String(n).padStart(2,"0"); };
+  var fmtDate = function(d, o){ try { return d.toLocaleDateString("es", o); } catch(e) { return d.toDateString(); } };
+
+  function tick(){
+    var d = new Date();
+    $("date").textContent = fmtDate(d,{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+    $("time").innerHTML = pad(d.getHours())+":"+pad(d.getMinutes())+'<span class="sec">:'+pad(d.getSeconds())+"</span>";
+    $("zone").textContent = tz ? "Zona horaria: "+tz : "";
+    if (lastDay !== d.toDateString()) { lastDay = d.toDateString(); renderPanels(d); }
+  }
+  var lastDay = "";
+  var NEWS = [
+    ["Panamá", "un terremoto de magnitud 7,7 activó alertas de tsunami en varios puntos del Pacífico americano."],
+    ["Ucrania", "ataques rusos dejaron 35 muertos en Donetsk, y emisarios de Zelenski inician una visita de dos días a EE. UU."],
+    ["Gaza", "se cumple un año del alto el fuego, con casi 1.500 muertos desde entonces y más de 74.000 en total."],
+    ["Irán", "el cerco naval estadounidense bloquea sus puertos del sur y su comercio exterior se desploma."],
+    ["Yemen", "la coalición liderada por Arabia Saudí lanzó una operación a gran escala contra los hutíes."],
+    ["Premios", "Navi Pillay ganó el Nobel de la Paz y Anne Carson el de Literatura."],
+    ["Europa", "tornados en Sicilia, Grecia prohíbe a menores usar redes sociales y la UE pide a Rusia datos sobre un caso sospechoso de peste en Siberia."]
+  ];
+  function newsText(){ return NEWS.map(function(n){ return "• "+(n[0] ? n[0]+": " : "")+n[1]; }).join("\n")+"\n(Resumen del "+(NEWS_LIVE ? LABEL : "10 de octubre de 2026, guardado")+".)"+(NEWS_LIVE ? staleNote() : ""); }
+  function dollarText(){
+    if (DOL) return "Dólar oficial (BCV): Bs. "+DOL.bcv+".\nParalelo (Binance P2P): "+DOL.par+", una brecha de "+DOL.gap+".\nDevaluación del bolívar en 2026: "+DOL.dev+".\n(Datos del "+LABEL+".)"+staleNote();
+    return "Dólar oficial (BCV): Bs. 876,80, vigente hasta el martes 13 de octubre.\nParalelo (Binance P2P): cerca de Bs. 1.015, una brecha de unos 16 %.\nEn 2026 el bolívar acumula una devaluación de unos 66 %: el dólar oficial empezó el año en Bs. 301,37.\n(Datos del 10 de octubre de 2026.)";
+  }
+  var LABEL = "10 de octubre de 2026", DOL = null, UPD = "", LAST = null, NEWS_LIVE = false;
+  function staleNote(){ var d = new Date(), t = d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); return UPD && t > UPD ? " (Ojo: estos datos tienen más de un día y pueden estar desactualizados.)" : ""; }
+  function renderNews(){ var ul = $("news"); ul.textContent = ""; NEWS.forEach(function(n){ var li = document.createElement("li"), b = document.createElement("b"); if (n[0]) { b.textContent = n[0]+": "; li.appendChild(b); } li.appendChild(document.createTextNode(n[1])); ul.appendChild(li); }); }
+  renderNews();
+  function applyLive(v){
+    if (!v || !v.dollar || !v.news) return;
+    LAST = v; DOL = v.dollar; NEWS = v.news; LABEL = v.label || LABEL; UPD = v.updated || "";
+    $("d-bcv").textContent = "Bs. "+DOL.bcv; $("d-par").textContent = DOL.par; $("d-gap").textContent = DOL.gap; $("d-dev").textContent = DOL.dev;
+    $("d-note").textContent = (DOL.note || "")+" Datos del "+LABEL+"."+staleNote();
+    $("n-note").textContent = NEWS_LIVE ? NSRC+" Resumen del "+LABEL+"."+staleNote() : "Resumen guardado del 10 de octubre de 2026; no se pudieron cargar noticias nuevas.";
+    renderNews();
+  }
+  var GNEWS_KEY = "719641db58680308ebae4e4ef2e8517b", START_RATE = 301.37, NSRC = "Según Euronews, EFE y otros medios.";
+  function iso(){ var d = new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function todayLabel(){ return fmtDate(new Date(),{day:"numeric",month:"long",year:"numeric"}); }
+  function fmtN(n){ return Number(n).toLocaleString("es-VE",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function loadDollar(){
+    fetch("https://ve.dolarapi.com/v1/dolares").then(function(r){ if (!r.ok) throw new Error("http"); return r.json(); }).then(function(a){
+      var of = a.filter(function(x){ return x.fuente === "oficial"; })[0], pa = a.filter(function(x){ return x.fuente === "paralelo"; })[0];
+      if (!of || !pa) throw new Error("datos");
+      var bo = of.promedio || of.venta || of.compra, bp = pa.promedio || pa.venta || pa.compra;
+      if (!bo || !bp) throw new Error("datos");
+      var up = Math.round((bo/START_RATE-1)*100), dev = Math.round((1-START_RATE/bo)*100);
+      applyLive({ updated: iso(), label: todayLabel(), news: NEWS, newsSrc: NSRC, dollar: {
+        bcv: fmtN(bo), par: "≈ Bs. "+fmtN(bp), gap: "≈ "+Math.round((bp/bo-1)*100)+" %", dev: "≈ "+dev+" %",
+        note: "El dólar oficial empezó el año en Bs. "+fmtN(START_RATE)+" y hoy marca Bs. "+fmtN(bo)+", un alza de unos "+up+" %. Datos de DolarApi (BCV y Yadio)." } });
+    }).catch(function(){});
+  }
+  function setNews(arr, src){
+    if (!arr || !arr.length) throw new Error("vacio");
+    NEWS = arr; NEWS_LIVE = true; NSRC = src; LABEL = todayLabel(); UPD = iso();
+    $("n-note").textContent = NSRC+" Resumen del "+LABEL+".";
+    renderNews();
+  }
+  function loadGNews(){
+    if (!GNEWS_KEY || GNEWS_KEY.indexOf("PEGA") === 0) return;
+    fetch("https://gnews.io/api/v4/top-headlines?category=world&lang=es&max=7&apikey="+encodeURIComponent(GNEWS_KEY)).then(function(r){ if (!r.ok) throw new Error("http"); return r.json(); }).then(function(j){
+      setNews((j.articles || []).map(function(x){ return [(x.source && x.source.name) || "", x.title]; }).filter(function(x){ return x[1]; }), "Titulares según GNews.");
+    }).catch(function(){});
+  }
+  function loadNews(){
+    fetch("https://api.rss2json.com/v1/api.json?rss_url="+encodeURIComponent("https://feeds.bbci.co.uk/mundo/rss.xml")).then(function(r){ if (!r.ok) throw new Error("http"); return r.json(); }).then(function(j){
+      if (j.status && j.status !== "ok") throw new Error("rss");
+      setNews((j.items || []).slice(0,7).map(function(x){ return ["", x.title]; }).filter(function(x){ return x[1]; }), "Titulares de BBC Mundo.");
+    }).catch(loadGNews);
+  }
+  function loadAll(){ loadDollar(); loadNews(); }
+  loadAll();
+  setInterval(loadAll, 30*60*1000);
+  var EXAMS = [
+    {n:"Educación Física", d:new Date(2026,9,13)},
+    {n:"Biología", d:new Date(2026,9,14)},
+    {n:"Castellano", d:new Date(2026,9,14)},
+    {n:"GHC", d:new Date(2026,9,14)},
+    {n:"GCRP", d:new Date(2026,9,15)}
+  ];
+  function startOfDay(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
+  function daysUntil(t, from){ return Math.round((startOfDay(t)-startOfDay(from))/86400000); }
+  function nextBirthday(now){ var b = new Date(now.getFullYear(),9,18); if (daysUntil(b,now) < 0) b = new Date(now.getFullYear()+1,9,18); return b; }
+  function when(n){ return n===0 ? "hoy" : n===1 ? "mañana" : n>1 ? "en "+n+" días" : "ya pasó"; }
+  function examDate(e){ return fmtDate(e.d,{weekday:"long",day:"numeric",month:"long"}); }
+  function bdayText(now){
+    var n = daysUntil(nextBirthday(now),now);
+    if (n===0) return "¡Hoy es tu cumpleaños! 🎉";
+    if (n===1) return "Falta 1 día para tu cumpleaños (18 de octubre).";
+    return "Faltan "+n+" días para tu cumpleaños (18 de octubre).";
+  }
+  function examsText(now){
+    var up = EXAMS.filter(function(e){ return daysUntil(e.d,now) >= 0; });
+    if (!up.length) return "No tienes exámenes pendientes.";
+    return up.map(function(e){ return e.n+": "+examDate(e)+" ("+when(daysUntil(e.d,now))+")"; }).join("\n");
+  }
+  function renderPanels(now){
+    var n = daysUntil(nextBirthday(now),now);
+    $("bn").textContent = n===0 ? "🎉" : n;
+    $("bt").textContent = n===0 ? "¡Hoy es tu cumpleaños!" : (n===1 ? "día para el 18 de octubre" : "días para el 18 de octubre");
+    var ul = $("exams"); ul.textContent = "";
+    EXAMS.forEach(function(e){
+      var k = daysUntil(e.d,now), li = document.createElement("li");
+      if (k < 0) li.className = "past";
+      var a = document.createElement("span"); a.textContent = e.n;
+      var b = document.createElement("span"); b.className = "d"; b.textContent = examDate(e)+" ("+when(k)+")";
+      li.appendChild(a); li.appendChild(b); ul.appendChild(li);
+    });
+  }
+  tick(); setInterval(tick, 1000);
+
+  function add(text, who){
+    var m = document.createElement("div");
+    m.className = "msg "+who; m.textContent = text;
+    $("log").appendChild(m);
+    m.scrollIntoView({block:"nearest"});
+  }
+
+  function clean(s){ return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""); }
+
+  function timeText(d){
+    var h = d.getHours();
+    return (h===1 ? "Es la " : "Son las ")+h+":"+pad(d.getMinutes())+" ("+pad(h)+":"+pad(d.getMinutes())+":"+pad(d.getSeconds())+").";
+  }
+  function dateText(d){ return "Hoy es "+fmtDate(d,{weekday:"long",day:"numeric",month:"long",year:"numeric"})+"."; }
+
+  function answer(raw){
+    var s = clean(raw), d = new Date();
+    if (/cumple/.test(s)) return bdayText(d);
+    if (/examen|prueba/.test(s)) return examsText(d);
+    if (/dolar|bolivar|devalu|bcv|divisa/.test(s)) return dollarText();
+    if (/noticia|mundo|actualidad/.test(s)) return newsText();
+    var hora = /\bhora\b|\bhoras\b/.test(s);
+    var semana = /dia de la semana|que dia (es|estamos)|dia es hoy/.test(s);
+    var fecha = /fecha|\bhoy\b|\bmes\b|\bano\b|\bdia\b/.test(s);
+    if (/zona/.test(s)) return tz ? "Tu dispositivo usa la zona horaria "+tz+"." : "No pude detectar tu zona horaria.";
+    if (hora && (fecha || semana)) return timeText(d)+"\n"+dateText(d);
+    if (hora) return timeText(d);
+    if (semana) return "Hoy es "+fmtDate(d,{weekday:"long"})+".";
+    if (/\bmes\b/.test(s) && !/fecha/.test(s)) return "Estamos en "+fmtDate(d,{month:"long"})+" de "+d.getFullYear()+".";
+    if (/\bano\b/.test(s) && !/fecha/.test(s)) return "Estamos en el año "+d.getFullYear()+".";
+    if (fecha) return dateText(d);
+    if (/gracias/.test(s)) return "De nada.";
+    if (/hola|buenas|buenos|hey/.test(s)) {
+      var h = d.getHours();
+      return (h<12?"Buenos días":h<20?"Buenas tardes":"Buenas noches")+". Pregúntame la hora o la fecha.";
+    }
+    return "Sé decirte la hora, la fecha, tus exámenes y cuánto falta para tu cumpleaños. Prueba con \"¿qué hora es?\" o \"¿qué fecha es hoy?\".";
+  }
+
+  var orb = {speaking:false, listening:false, kick:0, timer:null};
+  function stopSpeaking(){ orb.speaking = false; clearTimeout(orb.timer); }
+  function setSpeaking(len){ orb.speaking = true; clearTimeout(orb.timer); orb.timer = setTimeout(stopSpeaking, len*95+2000); }
+  (function(){
+    var cv = $("orb"); if (!cv || !cv.getContext) return;
+    var ctx = cv.getContext("2d"), W = cv.width, H = cv.height, N = 460, pts = [], g = Math.PI*(3-Math.sqrt(5));
+    var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    for (var k=0;k<N;k++){ var y0 = 1-2*(k+.5)/N, r0 = Math.sqrt(1-y0*y0), th = g*k; pts.push({x:Math.cos(th)*r0,y:y0,z:Math.sin(th)*r0,ph:Math.random()*6.283}); }
+    var ang = 0, level = 0, t = 0, frame = 0, col = "#D9791A";
+    function loop(){
+      frame++; t += 0.016;
+      if (frame % 30 === 1) { col = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || col; }
+      var target = orb.speaking ? 0.55 + 0.25*Math.sin(t*7) : (orb.listening ? 0.28 : 0);
+      target += orb.kick*0.35; orb.kick *= 0.9;
+      level += (target-level)*0.12;
+      ang += reduce ? 0 : 0.004 + level*0.03;
+      ctx.clearRect(0,0,W,H);
+      var R = W*0.34*(1+0.025*Math.sin(t*1.5)), ca = Math.cos(ang), sa = Math.sin(ang), tilt = 0.38, ct = Math.cos(tilt), st = Math.sin(tilt), proj = [], i;
+      for (i=0;i<N;i++){
+        var p = pts[i], d = 1 + (reduce ? 0 : level*0.38*Math.sin(p.ph + t*(6+level*6)));
+        var x = p.x*d, y = p.y*d, z = p.z*d;
+        var x1 = x*ca + z*sa, z1 = -x*sa + z*ca;
+        proj.push([x1, y*ct - z1*st, y*st + z1*ct]);
+      }
+      proj.sort(function(a,b){ return a[2]-b[2]; });
+      ctx.fillStyle = col;
+      for (i=0;i<N;i++){
+        var q = proj[i], s = 2.2/(2.2-q[2]), depth = (q[2]+1)/2;
+        ctx.globalAlpha = 0.18 + 0.82*depth;
+        ctx.beginPath();
+        ctx.arc(W/2 + q[0]*R*s, H/2 + q[1]*R*s, (1.1+depth*1.9)*(1+level*0.6)*(W/520)*1.6, 0, 6.2832);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(loop);
+    }
+    loop();
+  })();
+  var voiceList = [], speechToken = 0;
+  function loadVoices(){
+    if (!("speechSynthesis" in window)) return;
+    voiceList = speechSynthesis.getVoices().filter(function(v){ return /^es/i.test(v.lang); });
+    var sel = $("voicesel"), keep = sel.value;
+    sel.textContent = "";
+    var auto = document.createElement("option"); auto.value = "auto"; auto.textContent = "Voz automática (grave)"; sel.appendChild(auto);
+    voiceList.forEach(function(v, idx){ var o = document.createElement("option"); o.value = String(idx); o.textContent = v.name+" ("+v.lang+")"; sel.appendChild(o); });
+    if (keep) sel.value = keep;
+    if (!voiceList.length) auto.textContent = "No hay voces en español disponibles";
+    sel.style.display = "";
+  }
+  if ("speechSynthesis" in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; setTimeout(loadVoices, 600); setTimeout(loadVoices, 2000); }
+  function pickVoice(){
+    var val = $("voicesel").value;
+    if (val && val !== "auto" && voiceList[+val]) return voiceList[+val];
+    var male = /jorge|pablo|raul|raúl|diego|juan|carlos|enrique|alvaro|álvaro|miguel|antonio|male|hombre|david/i;
+    return voiceList.filter(function(v){ return male.test(v.name); })[0] || voiceList[0] || null;
+  }
+  function prepSpeech(text){
+    var s = text.replace(/•/g,"").replace(/\(\d{1,2}:\d{2}:\d{2}\)/g,"")
+      .replace(/Bs\.\s*([\d.,]+)/g,"$1 bolívares")
+      .replace(/\d{1,3}(?:\.\d{3})+/g,function(n){ return n.replace(/\./g,""); })
+      .replace(/≈/g,"aproximadamente ").replace(/%/g," por ciento")
+      .replace(/EE\.\s*UU\./g,"Estados Unidos").replace(/\bGHC\b/g,"G H C").replace(/\bGCRP\b/g,"G C R P")
+      .replace(/\s*\n\s*/g,". ").replace(/\s+/g," ").trim();
+    var parts = s.match(/[^.!?;]+[.!?;]*/g) || [s], out = [], cur = "";
+    parts.forEach(function(p){ if ((cur+p).length > 160 && cur) { out.push(cur.trim()); cur = p; } else { cur += p; } });
+    if (cur.trim()) out.push(cur.trim());
+    return out;
+  }
+  function speak(text){
+    if (!("speechSynthesis" in window) || !$("speak").checked) return;
+    var my = ++speechToken, chunks = prepSpeech(text), i = 0;
+    setSpeaking(text.length);
+    try { speechSynthesis.cancel(); } catch(e) {}
+    function next(){
+      if (my !== speechToken) return;
+      if (i >= chunks.length) { stopSpeaking(); return; }
+      try {
+        var u = new SpeechSynthesisUtterance(chunks[i++]), v = pickVoice(), robot = $("robot").checked;
+        u.lang = v ? v.lang : "es-ES";
+        if (v) u.voice = v;
+        u.pitch = robot ? 0.1 : 1;
+        u.rate = robot ? 0.85 : 1;
+        u.onboundary = function(){ orb.kick = 1; };
+        u.onend = next;
+        u.onerror = function(){ if (my === speechToken) next(); };
+        speechSynthesis.speak(u);
+      } catch(e) { stopSpeaking(); }
+    }
+    setTimeout(next, 80);
+  }
+  if (!("speechSynthesis" in window)) $("voicebox").style.display = "none";
+  $("speak").addEventListener("change", function(){ if (!this.checked && "speechSynthesis" in window) speechSynthesis.cancel(); });
+
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { $("mic").style.display = "none"; }
+  else {
+    $("mic").addEventListener("click", function(){
+      var btn = this, rec;
+      try {
+        rec = new SR(); rec.lang = "es-ES"; rec.interimResults = false; rec.maxAlternatives = 1;
+        rec.onresult = function(e){ ask(e.results[0][0].transcript); };
+        rec.onerror = function(e){ add("No pude usar el micrófono ("+e.error+"). Revisa el permiso del navegador.","bot"); };
+        rec.onend = function(){ btn.classList.remove("on"); orb.listening = false; };
+        btn.classList.add("on"); orb.listening = true;
+        rec.start();
+      } catch(err) { btn.classList.remove("on"); }
+    });
+  }
+
+  function ask(text){
+    text = text.trim(); if(!text) return;
+    var r = answer(text); add(text,"me"); add(r,"bot"); speak(r);
+  }
+
+  add("Hola, soy tu asistente. Pregúntame la hora o la fecha.","bot");
+  $("form").addEventListener("submit", function(e){ e.preventDefault(); ask($("q").value); $("q").value=""; });
+  $("chips").addEventListener("click", function(e){ if(e.target.tagName==="BUTTON") ask(e.target.textContent); });
+})();
+</script>
+</body>
+</html>
